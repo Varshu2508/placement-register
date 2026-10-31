@@ -1,4 +1,4 @@
-# College Placement Management Portal
+# College Placement Management Portal-level 3
 
 ## Project Overview
 
@@ -60,4 +60,3 @@ This is Level 1 of the College Placement Management Portal. It uses a command-li
 
 ## Demo Documentation
 
-See [`docs/level-01-demo.md`](docs/level-01-demo.md) for successful workflows, rejected-input examples, and project limitations.
