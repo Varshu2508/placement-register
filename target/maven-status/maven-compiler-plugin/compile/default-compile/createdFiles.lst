@@ -1,0 +1,8 @@
+com\placement\DatabaseConnection.class
+com\placement\SeedDataRunner.class
+com\placement\CompanyRepository.class
+com\placement\ApplicationRepository.class
+com\placement\App.class
+com\placement\StudentRepository.class
+com\placement\JobRepository.class
+com\placement\DatabaseMigration.class

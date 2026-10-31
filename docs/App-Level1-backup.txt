@@ -1,0 +1,472 @@
+
+package com.placement;
+
+import java.util.*;
+
+public class App {
+
+    static Scanner sc = new Scanner(System.in);
+
+    static Map<String, Student> students = new LinkedHashMap<>();
+    static Map<String, Company> companies = new LinkedHashMap<>();
+    static Map<String, Job> jobs = new LinkedHashMap<>();
+    static Map<String, Application> applications = new LinkedHashMap<>();
+
+    static class Student {
+        String id, name, department;
+        double cgpa;
+
+        Student(String id, String name, String department, double cgpa) {
+            this.id = id;
+            this.name = name;
+            this.department = department;
+            this.cgpa = cgpa;
+        }
+    }
+
+    static class Company {
+        String id, name;
+
+        Company(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+    static class Job {
+        String id, companyId, role;
+        double minimumCgpa;
+        Set<String> allowedDepartments;
+
+        Job(String id, String companyId, String role,
+            double minimumCgpa, Set<String> allowedDepartments) {
+            this.id = id;
+            this.companyId = companyId;
+            this.role = role;
+            this.minimumCgpa = minimumCgpa;
+            this.allowedDepartments = new LinkedHashSet<>(allowedDepartments);
+        }
+    }
+
+    static class Application {
+        String id, studentId, jobId;
+        String status = "APPLIED";
+
+        Application(String id, String studentId, String jobId) {
+            this.id = id;
+            this.studentId = studentId;
+            this.jobId = jobId;
+        }
+    }
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("\n=== COLLEGE PLACEMENT PORTAL ===");
+            System.out.println("1. Add Student");
+            System.out.println("2. List Students");
+            System.out.println("3. Update Student");
+            System.out.println("4. Add Company");
+            System.out.println("5. List Companies");
+            System.out.println("6. Update Company");
+            System.out.println("7. Add Job");
+            System.out.println("8. List Jobs");
+            System.out.println("9. Update Job");
+            System.out.println("10. Apply for Job");
+            System.out.println("11. List Applications for a Job");
+            System.out.println("12. Update Application Status");
+            System.out.println("0. Exit");
+            System.out.print("Choose: ");
+
+            String choice = sc.nextLine().trim();
+
+            try {
+                switch (choice) {
+                    case "1" -> addStudent();
+                    case "2" -> listStudents();
+                    case "3" -> updateStudent();
+                    case "4" -> addCompany();
+                    case "5" -> listCompanies();
+                    case "6" -> updateCompany();
+                    case "7" -> addJob();
+                    case "8" -> listJobs();
+                    case "9" -> updateJob();
+                    case "10" -> applyForJob();
+                    case "11" -> listApplicationsForJob();
+                    case "12" -> updateApplicationStatus();
+                    case "0" -> {
+                        System.out.println("Goodbye!");
+                        return;
+                    }
+                    default -> System.out.println("Invalid menu choice.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number. Please try again.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    static boolean validCgpa(double cgpa) {
+        return Double.isFinite(cgpa) && cgpa >= 0 && cgpa <= 10;
+    }
+
+    static String readRequired(String prompt) {
+        System.out.print(prompt);
+        return sc.nextLine().trim();
+    }
+
+    static double readCgpa(String prompt) {
+        System.out.print(prompt);
+        return Double.parseDouble(sc.nextLine().trim());
+    }
+
+    static Set<String> readDepartments() {
+        String input = readRequired(
+            "Allowed departments (comma-separated): "
+        );
+
+        Set<String> result = new LinkedHashSet<>();
+
+        for (String department : input.split(",")) {
+            String value = department.trim();
+
+            if (!value.isEmpty()) {
+                result.add(value);
+            }
+        }
+
+        if (result.isEmpty()) {
+            throw new IllegalArgumentException(
+                "At least one department is required."
+            );
+        }
+
+        return result;
+    }
+
+    static void addStudent() {
+        String id = readRequired("Student ID: ");
+
+        if (id.isEmpty() || students.containsKey(id)) {
+            System.out.println("Missing or duplicate student ID.");
+            return;
+        }
+
+        String name = readRequired("Name: ");
+        String department = readRequired("Department: ");
+        double cgpa = readCgpa("CGPA (0-10): ");
+
+        if (name.isEmpty() || department.isEmpty()
+                || !validCgpa(cgpa)) {
+            System.out.println("Invalid or missing student details.");
+            return;
+        }
+
+        students.put(id, new Student(id, name, department, cgpa));
+        System.out.println("Student added successfully.");
+    }
+
+    static void listStudents() {
+        if (students.isEmpty()) {
+            System.out.println("No students found.");
+            return;
+        }
+
+        students.values().forEach(s ->
+            System.out.printf(
+                "%s | %s | %s | CGPA: %.2f%n",
+                s.id, s.name, s.department, s.cgpa
+            )
+        );
+    }
+
+    static void updateStudent() {
+        String id = readRequired("Student ID to update: ");
+        Student s = students.get(id);
+
+        if (s == null) {
+            System.out.println("Student ID not found.");
+            return;
+        }
+
+        String name = readRequired("New name: ");
+        String department = readRequired("New department: ");
+        double cgpa = readCgpa("New CGPA (0-10): ");
+
+        if (name.isEmpty() || department.isEmpty()
+                || !validCgpa(cgpa)) {
+            System.out.println("Invalid or missing student details.");
+            return;
+        }
+
+        s.name = name;
+        s.department = department;
+        s.cgpa = cgpa;
+
+        System.out.println("Student updated successfully.");
+    }
+
+    static void addCompany() {
+        String id = readRequired("Company ID: ");
+
+        if (id.isEmpty() || companies.containsKey(id)) {
+            System.out.println("Missing or duplicate company ID.");
+            return;
+        }
+
+        String name = readRequired("Company name: ");
+
+        if (name.isEmpty()) {
+            System.out.println("Company name cannot be blank.");
+            return;
+        }
+
+        companies.put(id, new Company(id, name));
+        System.out.println("Company added successfully.");
+    }
+
+    static void listCompanies() {
+        if (companies.isEmpty()) {
+            System.out.println("No companies found.");
+            return;
+        }
+
+        companies.values().forEach(c ->
+            System.out.println(c.id + " | " + c.name)
+        );
+    }
+
+    static void updateCompany() {
+        String id = readRequired("Company ID to update: ");
+        Company c = companies.get(id);
+
+        if (c == null) {
+            System.out.println("Company ID not found.");
+            return;
+        }
+
+        String name = readRequired("New company name: ");
+
+        if (name.isEmpty()) {
+            System.out.println("Company name cannot be blank.");
+            return;
+        }
+
+        c.name = name;
+        System.out.println("Company updated successfully.");
+    }
+
+    static void addJob() {
+        String id = readRequired("Job ID: ");
+
+        if (id.isEmpty() || jobs.containsKey(id)) {
+            System.out.println("Missing or duplicate job ID.");
+            return;
+        }
+
+        if (companies.isEmpty()) {
+            System.out.println("Add a company before adding a job.");
+            return;
+        }
+
+        listCompanies();
+
+        String companyId = readRequired("Company ID: ");
+
+        if (!companies.containsKey(companyId)) {
+            System.out.println("Company ID not found.");
+            return;
+        }
+
+        String role = readRequired("Job role: ");
+        double minCgpa = readCgpa("Minimum CGPA (0-10): ");
+        Set<String> departments = readDepartments();
+
+        if (role.isEmpty() || !validCgpa(minCgpa)) {
+            System.out.println("Invalid job details.");
+            return;
+        }
+
+        jobs.put(
+            id,
+            new Job(id, companyId, role, minCgpa, departments)
+        );
+
+        System.out.println("Job added successfully.");
+    }
+
+    static void listJobs() {
+        if (jobs.isEmpty()) {
+            System.out.println("No jobs found.");
+            return;
+        }
+
+        jobs.values().forEach(j -> {
+            Company c = companies.get(j.companyId);
+            String companyName = c == null ? "Unknown" : c.name;
+
+            System.out.printf(
+                "%s | %s | %s | Minimum CGPA: %.2f | Departments: %s%n",
+                j.id,
+                companyName,
+                j.role,
+                j.minimumCgpa,
+                String.join(", ", j.allowedDepartments)
+            );
+        });
+    }
+
+    static void updateJob() {
+        String id = readRequired("Job ID to update: ");
+        Job j = jobs.get(id);
+
+        if (j == null) {
+            System.out.println("Job ID not found.");
+            return;
+        }
+
+        listCompanies();
+
+        String companyId = readRequired("New company ID: ");
+
+        if (!companies.containsKey(companyId)) {
+            System.out.println("Company ID not found.");
+            return;
+        }
+
+        String role = readRequired("New job role: ");
+        double minCgpa = readCgpa("New minimum CGPA (0-10): ");
+        Set<String> departments = readDepartments();
+
+        if (role.isEmpty() || !validCgpa(minCgpa)) {
+            System.out.println("Invalid job details.");
+            return;
+        }
+
+        j.companyId = companyId;
+        j.role = role;
+        j.minimumCgpa = minCgpa;
+        j.allowedDepartments = departments;
+
+        System.out.println("Job updated successfully.");
+    }
+
+    static void applyForJob() {
+        String studentId = readRequired("Student ID: ");
+        String jobId = readRequired("Job ID: ");
+
+        Student s = students.get(studentId);
+        Job j = jobs.get(jobId);
+
+        if (s == null || j == null) {
+            System.out.println("Student or job ID not found.");
+            return;
+        }
+
+        if (!validCgpa(s.cgpa)) {
+            System.out.println("Rejected: Invalid student CGPA.");
+            return;
+        }
+
+        if (s.cgpa < j.minimumCgpa) {
+            System.out.println(
+                "Rejected: CGPA is below the job requirement."
+            );
+            return;
+        }
+
+        if (!j.allowedDepartments.contains(s.department)) {
+            System.out.println(
+                "Rejected: Department is not eligible."
+            );
+            return;
+        }
+
+        boolean duplicate = applications.values().stream().anyMatch(a ->
+            a.studentId.equals(studentId)
+                && a.jobId.equals(jobId)
+        );
+
+        if (duplicate) {
+            System.out.println(
+                "Rejected: Student has already applied for this job."
+            );
+            return;
+        }
+
+        String applicationId = "APP" + (applications.size() + 1);
+
+        applications.put(
+            applicationId,
+            new Application(applicationId, studentId, jobId)
+        );
+
+        System.out.println(
+            "Application submitted. ID: " + applicationId
+        );
+    }
+
+    static void listApplicationsForJob() {
+        String jobId = readRequired("Job ID: ");
+
+        if (!jobs.containsKey(jobId)) {
+            System.out.println("Job ID not found.");
+            return;
+        }
+
+        boolean found = false;
+
+        for (Application a : applications.values()) {
+            if (a.jobId.equals(jobId)) {
+                System.out.printf(
+                    "%s | Student: %s | Status: %s%n",
+                    a.id, a.studentId, a.status
+                );
+
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println(
+                "No applications found for this job."
+            );
+        }
+    }
+
+    static void updateApplicationStatus() {
+        String applicationId = readRequired("Application ID: ");
+        Application a = applications.get(applicationId);
+
+        if (a == null) {
+            System.out.println("Application ID not found.");
+            return;
+        }
+
+        if (!a.status.equals("APPLIED")) {
+            System.out.println(
+                "Only APPLIED applications can be updated."
+            );
+            return;
+        }
+
+        System.out.println("1. SHORTLISTED");
+        System.out.println("2. REJECTED");
+
+        String choice = readRequired("Choose new status: ");
+
+        switch (choice) {
+            case "1" -> a.status = "SHORTLISTED";
+            case "2" -> a.status = "REJECTED";
+            default -> {
+                System.out.println("Invalid status choice.");
+                return;
+            }
+        }
+
+        System.out.println(
+            "Application status updated to " + a.status + "."
+        );
+    }
+}
